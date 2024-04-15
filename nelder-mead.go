@@ -48,7 +48,7 @@ func (o *Optimizer) Optimize(
 	start [][]float64,
 	epsilon float64,
 	// scale float64,
-) (float64, []float64){
+) (float64, []float64) {
 	n := len(start)
 	values := make([]float64, n)
 	centroid := make([]float64, n-1) //mid
@@ -71,58 +71,53 @@ func (o *Optimizer) Optimize(
 		}
 
 		//reflect the largest value to new vertex ref
-		for i := 0; i < n-1; i++ {
-			ref[i] = centroid[i] + o.Alpha*(centroid[i]-start[len(start)-1][i])
-		}
+		reflectPoint(centroid, start[len(start)-1], ref, o.Alpha)
+		refected_f := objfunc(ref)
 
-		fr := objfunc(ref)
-		if fr < values[len(values)-2] && fr >= values[0] {
+		if refected_f < values[len(values)-2] && refected_f >= values[0] {
 			//start[len(start)-1] = ref
 			for i := 0; i < n-1; i++ {
 				start[len(start)-1][i] = ref[i]
 			}
-			values[len(start)-1] = fr
+			values[len(start)-1] = refected_f
 		}
 
 		//expansion
-		if fr < values[0] {
-			for i := 0; i < n-1; i++ {
-				exp[i] = centroid[i] + o.Gamma*(ref[i]-centroid[i])
-			}
-			fe := objfunc(exp)
-			if fe < fr {
+		if refected_f < values[0] {
+			expandPoint(centroid, ref, exp, o.Gamma)
+			expansion_f := objfunc(exp)
+			if expansion_f < refected_f {
 				for i := 0; i < n-1; i++ {
 					start[len(start)-1][i] = exp[i]
 				}
-				values[len(start)-1] = fe
+				values[len(start)-1] = expansion_f
 			} else {
 				for i := 0; i < n-1; i++ {
 					start[len(start)-1][i] = ref[i]
 				}
-				values[len(start)-1] = fr
+				values[len(start)-1] = refected_f
 			}
 		}
+
 		//contraction
-		if fr >= values[len(values)-2] {
-			if fr < values[len(start)-1] {
+		if refected_f >= values[len(values)-2] {
+			if refected_f < values[len(start)-1] {
+
 				// perform outside contraction
-				for i := 0; i < n-1; i++ {
-					contr[i] = centroid[i] + o.Beta*(ref[i]-centroid[i])
-				}
+				contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, false)
 
 			} else {
 				// perform inside contraction
-				for i := 0; i < n-1; i++ {
-					contr[i] = centroid[i] - o.Beta*(centroid[i]-start[len(start)-1][i])
-				}
+				contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, true)
+
 			}
 
-			fc := objfunc(contr)
-			if fc < values[len(start)-1] {
+			contraction_f := objfunc(contr)
+			if contraction_f < values[len(start)-1] {
 				for i := 0; i < n-1; i++ {
 					start[len(start)-1][i] = contr[i]
 				}
-				values[len(start)-1] = fc
+				values[len(start)-1] = contraction_f
 			} else {
 				//shrink
 				for j := 1; j < n; j++ {
@@ -135,18 +130,9 @@ func (o *Optimizer) Optimize(
 
 		}
 		// вычисляем среднеквадратичное  отклонение
-		fsum := 0.0
-		for i := 0; i < n; i++ {
-			fsum += values[i]
-		}
-		favg := fsum / float64(n+1)
-		s := 0.0
-		for i := 0; i < n; i++ {
-			s += math.Pow((values[i]-favg), 2.0) / float64(n-1)
-		}
-		s = math.Sqrt(s)
+		s := standert_deviation(values)
 		if s < epsilon {
-			//fmt.Println(itr)
+			fmt.Println(itr)
 			break
 		}
 
@@ -155,6 +141,44 @@ func (o *Optimizer) Optimize(
 
 	return values[0], start[0]
 
+}
+
+func reflectPoint(centroid, start, ref []float64, alpha float64) {
+	for i := 0; i < len(centroid); i++ {
+		ref[i] = centroid[i] + alpha*(centroid[i]-start[i])
+	}
+}
+
+func expandPoint(centroid, ref, exp []float64, gamma float64) {
+	for i := 0; i < len(centroid); i++ {
+		exp[i] = centroid[i] + gamma*(ref[i]-centroid[i])
+	}
+}
+
+func contractPoint(centroid, start, ref, contr []float64, beta float64, isInside bool) {
+	if isInside {
+		for i := 0; i < len(centroid); i++ {
+			contr[i] = centroid[i] - beta*(centroid[i]-start[i])
+		}
+	} else {
+		for i := 0; i < len(centroid); i++ {
+			contr[i] = centroid[i] + beta*(ref[i]-centroid[i])
+		}
+	}
+}
+
+func standert_deviation(values []float64) float64 {
+	n := float64(len(values))
+	fsum := 0.0
+	for i := 0; i < len(values); i++ {
+		fsum += values[i]
+	}
+	favg := fsum / (n + 1)
+	s := 0.0
+	for i := 0; i < len(values); i++ {
+		s += math.Pow((values[i]-favg), 2.0) / float64(len(values)-1)
+	}
+	return math.Sqrt(s)
 }
 
 type nmVertexSorter struct {
@@ -177,13 +201,13 @@ func (n nmVertexSorter) Swap(i, j int) {
 
 func main() {
 	f := func(x []float64) float64 {
-		X1, X2:= x[0], x[1]
-		return 100* math.Pow(X2 - math.Pow(X1,2), 2) + math.Pow((1-X1),2)
+		X1, X2 := x[0], x[1]
+		return 100*math.Pow(X2-math.Pow(X1, 2), 2) + math.Pow((1-X1), 2)
 		//X1*X1
 		//100* math.Pow(X2 - math.Pow(X1,2), 2) + math.Pow((1-X1),2)
 		//X1*X1 + X1*X2 + X2*X2 - 6*X1 - 9*X2
 	}
 	start := [][]float64{[]float64{9876, -9875}, []float64{7878, -9}, []float64{3, 1}}
-	res, coord :=New().Optimize(f, start, 1e-8)
-	fmt.Printf("%.3f %.3f",res, coord)
+	res, coord := New().Optimize(f, start, 1e-8)
+	fmt.Printf("%.3f %.3f", res, coord)
 }
