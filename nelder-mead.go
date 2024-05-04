@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"math"
 	"sort"
+
+	_ "github.com/Knetic/govaluate"
+	"github.com/Pramod-Devireddy/go-exprtk"
 )
 
 const (
@@ -16,7 +19,11 @@ const (
 	defaultDelta = 0.5
 	// expansion coefficient
 	defaultGamma = 2.0
+
+	epsilon = 1e-8
 )
+
+var expression string
 
 // Optimizer represents the parameters to the Nelder-Mead simplex method.
 type Optimizer struct {
@@ -43,104 +50,99 @@ func New() *Optimizer {
 	}
 }
 
-func (o *Optimizer) Optimize(
+func (o *Optimizer) CalculateNextPoints(
 	objfunc func([]float64) float64,
 	start [][]float64,
-	epsilon float64,
-	// scale float64,
-) (float64, []float64) {
+) ([]float64, [][]float64) {
 	n := len(start)
 	values := make([]float64, n)
 	centroid := make([]float64, n-1) //mid
 	ref := make([]float64, n-1)      //reflection
 	exp := make([]float64, n-1)      //expansion
 	contr := make([]float64, n-1)    //contraction
-	for itr := 1; itr <= o.MaxIterations; itr++ {
-		for i := 0; i < n; i++ {
-			values[i] = objfunc(start[i])
-		}
-		sort.Sort(nmVertexSorter{start, values})
-		//fmt.Println(values[0], values[1], values[2])
-		for i := 0; i < len(start[0]); i++ {
-			cent := 0.0
-			for m := 0; m < n-1; m++ {
 
-				cent += start[m][i]
+	for i := 0; i < n; i++ {
+		values[i] = objfunc(start[i])
+	}
+	sort.Sort(nmVertexSorter{start, values})
+	for i := 0; i < len(start[0]); i++ {
+		cent := 0.0
+		for m := 0; m < n-1; m++ {
+
+			cent += start[m][i]
+		}
+		centroid[i] = cent / float64(n-1)
+	}
+
+	//reflect the largest value to new vertex ref
+	reflectPoint(centroid, start[len(start)-1], ref, o.Alpha)
+	refected_f := objfunc(ref)
+
+	if refected_f < values[len(values)-2] && refected_f >= values[0] {
+		//start[len(start)-1] = ref
+		for i := 0; i < n-1; i++ {
+			start[len(start)-1][i] = ref[i]
+		}
+		values[len(start)-1] = refected_f
+	}
+
+	//expansion
+	if refected_f < values[0] {
+		expandPoint(centroid, ref, exp, o.Gamma)
+		expansion_f := objfunc(exp)
+		if expansion_f < refected_f {
+			for i := 0; i < n-1; i++ {
+				start[len(start)-1][i] = exp[i]
 			}
-			centroid[i] = cent / float64(n-1)
-		}
-
-		//reflect the largest value to new vertex ref
-		reflectPoint(centroid, start[len(start)-1], ref, o.Alpha)
-		refected_f := objfunc(ref)
-
-		if refected_f < values[len(values)-2] && refected_f >= values[0] {
-			//start[len(start)-1] = ref
+			values[len(start)-1] = expansion_f
+		} else {
 			for i := 0; i < n-1; i++ {
 				start[len(start)-1][i] = ref[i]
 			}
 			values[len(start)-1] = refected_f
 		}
+	}
 
-		//expansion
-		if refected_f < values[0] {
-			expandPoint(centroid, ref, exp, o.Gamma)
-			expansion_f := objfunc(exp)
-			if expansion_f < refected_f {
-				for i := 0; i < n-1; i++ {
-					start[len(start)-1][i] = exp[i]
-				}
-				values[len(start)-1] = expansion_f
-			} else {
-				for i := 0; i < n-1; i++ {
-					start[len(start)-1][i] = ref[i]
-				}
-				values[len(start)-1] = refected_f
-			}
-		}
+	//contraction
+	if refected_f >= values[len(values)-2] {
+		if refected_f < values[len(start)-1] {
 
-		//contraction
-		if refected_f >= values[len(values)-2] {
-			if refected_f < values[len(start)-1] {
+			// perform outside contraction
+			contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, false)
 
-				// perform outside contraction
-				contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, false)
-
-			} else {
-				// perform inside contraction
-				contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, true)
-
-			}
-
-			contraction_f := objfunc(contr)
-			if contraction_f < values[len(start)-1] {
-				for i := 0; i < n-1; i++ {
-					start[len(start)-1][i] = contr[i]
-				}
-				values[len(start)-1] = contraction_f
-			} else {
-				//shrink
-				for j := 1; j < n; j++ {
-					for i := 0; i < len(start[0]); i++ {
-						start[j][i] = start[0][i] + o.Delta*(start[j][i]-start[0][i])
-					}
-				}
-
-			}
+		} else {
+			// perform inside contraction
+			contractPoint(centroid, start[len(start)-1], ref, contr, o.Beta, true)
 
 		}
-		// вычисляем среднеквадратичное  отклонение
-		s := standert_deviation(values)
-		if s < epsilon {
-			fmt.Println(itr)
-			break
+
+		contraction_f := objfunc(contr)
+		if contraction_f < values[len(start)-1] {
+			for i := 0; i < n-1; i++ {
+				start[len(start)-1][i] = contr[i]
+			}
+			values[len(start)-1] = contraction_f
+		} else {
+			//shrink
+			for j := 1; j < n; j++ {
+				for i := 0; i < len(start[0]); i++ {
+					start[j][i] = start[0][i] + o.Delta*(start[j][i]-start[0][i])
+				}
+			}
+
 		}
 
 	}
+
 	sort.Sort(nmVertexSorter{start, values})
 
-	return values[0], start[0]
+	return values, start
 
+}
+
+func (o *Optimizer) checkStopCondition(values []float64) bool {
+	s := standert_deviation(values)
+	return s < epsilon
 }
 
 func reflectPoint(centroid, start, ref []float64, alpha float64) {
@@ -200,14 +202,31 @@ func (n nmVertexSorter) Swap(i, j int) {
 }
 
 func main() {
+	var input string //"100*pow(X2-pow(X1, 2), 2) + pow((1-X1), 2)"
+	fmt.Scan(&input)
+	expression = input
 	f := func(x []float64) float64 {
-		X1, X2 := x[0], x[1]
-		return 100*math.Pow(X2-math.Pow(X1, 2), 2) + math.Pow((1-X1), 2)
-		//X1*X1
-		//100* math.Pow(X2 - math.Pow(X1,2), 2) + math.Pow((1-X1),2)
-		//X1*X1 + X1*X2 + X2*X2 - 6*X1 - 9*X2
+
+		exprtkObj := exprtk.NewExprtk()
+		defer exprtkObj.Delete()
+
+		exprtkObj.SetExpression(expression)
+
+		exprtkObj.AddDoubleVariable("X1")
+		exprtkObj.AddDoubleVariable("X2")
+
+		err := exprtkObj.CompileExpression()
+		if err != nil {
+			fmt.Println(err.Error())
+
+		}
+
+		exprtkObj.SetDoubleVariableValue("X1", x[0])
+		exprtkObj.SetDoubleVariableValue("X2", x[1])
+
+		return exprtkObj.GetEvaluatedValue()
 	}
-	start := [][]float64{[]float64{9876, -9875}, []float64{7878, -9}, []float64{3, 1}}
-	res, coord := New().Optimize(f, start, 1e-8)
+	start := [][]float64{[]float64{1, 1}, []float64{2, 1}, []float64{-1, 2}}
+	res, coord := New().CalculateNextPoints(f, start)
 	fmt.Printf("%.3f %.3f", res, coord)
 }
