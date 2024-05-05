@@ -1,0 +1,122 @@
+﻿<Window x:Class="Nelder_Mead_App.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Nelder_Mead_App"
+        xmlns:validations="clr-namespace:Nelder_Mead_App.Validations"
+        xmlns:ui="http://schemas.modernwpf.com/2019" xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        mc:Ignorable="d"
+        ui:ThemeManager.RequestedTheme="Light"
+        Title="SettingsWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Label Content="Параметры алгоритма"
+               Style="{DynamicResource Header}"/>
+        <ScrollViewer Grid.Row="1"
+                      Background="{DynamicResource LightGray}">
+            <ItemsControl Margin="40,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <TextBox Margin="15,10"
+                     ui:ControlHelper.Header="Максимальное число итераций"
+                     >
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.MaxIterations"
+                                 UpdateSourceTrigger="PropertyChanged" >
+                            <Binding.ValidationRules>
+                                <validations:IntRangeValidationRule Min="1"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <TextBox Margin="15,10"
+                     ui:ControlHelper.Header="Коэффициент отражения"
+                         >
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.ReflectionCoef"
+                                UpdateSourceTrigger="PropertyChanged" >
+                            <Binding.ValidationRules>
+                                <validations:DoubleRangeValidationRule Min="0"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <TextBox Margin="15,10"
+                     ui:ControlHelper.Header="Коэффициент сжатия">
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.ContractionCoef"
+            UpdateSourceTrigger="PropertyChanged">
+                            <Binding.ValidationRules>
+                                <validations:DoubleRangeValidationRule Min="0"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <TextBox Margin="15,10"
+                     ui:ControlHelper.Header="Коэффициент сокращения"
+                         >
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.ShrinkCoef"
+UpdateSourceTrigger="PropertyChanged" >
+                            <Binding.ValidationRules>
+                                <validations:DoubleRangeValidationRule Min="0"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <TextBox Margin="15,10"
+                    ui:ControlHelper.Header="Коэффициент расширения"
+                         >
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.ExpansionCoef"
+UpdateSourceTrigger="PropertyChanged" >
+                            <Binding.ValidationRules>
+                                <validations:DoubleRangeValidationRule Min="0"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <TextBox Margin="15,10"
+                    ui:ControlHelper.Header="Погрешность"
+                        >
+                    <TextBox.Text>
+                        <Binding Path="AlgorithmParameters.SolutionPrecision"
+                                   UpdateSourceTrigger="PropertyChanged" >
+                            <Binding.ValidationRules>
+                                <validations:DoubleRangeValidationRule Min="0"/>
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+                <CheckBox Margin="15,10"
+                          Content="Задавать симплекс вручную"
+                          IsEnabled="True"
+                          IsChecked="{Binding AlgorithmParameters.UseUserSimplex}"/>
+            </ItemsControl>
+        </ScrollViewer>
+        <Button HorizontalAlignment="Right"
+                Margin="40,15"
+                Height="35"
+                Style="{StaticResource AccentButtonStyle}"
+                Grid.Row="2"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding IsSaveButtonEnabled}">
+            <Button.Content>
+                <Label Style="{DynamicResource Header}"
+                               Content="Сохранить"
+                               Margin="15,0"
+                               FontSize="12"
+                               Foreground="White"/>
+            </Button.Content>
+        </Button>
+    </Grid>
+</Window>
