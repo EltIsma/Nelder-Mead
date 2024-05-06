@@ -1,11 +1,4 @@
-﻿using ModernWpf.Controls;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Resources;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using System.Windows.Controls;
 
 namespace Nelder_Mead_App.Validations;
@@ -24,7 +17,7 @@ public class DoubleRangeValidationRule : ValidationRule
         }
         catch
         {
-            return new ValidationResult(false, 
+            return new ValidationResult(false,
                 "Введите число с плавающей точкой");
         }
 

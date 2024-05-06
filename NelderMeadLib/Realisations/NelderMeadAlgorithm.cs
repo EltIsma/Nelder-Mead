@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using NelderMeadLib.Exceptions;
+﻿using NelderMeadLib.Exceptions;
 using NelderMeadLib.Interfaces;
+using NelderMeadLib.Models;
 
-namespace NelderMeadLib.Models;
+namespace NelderMeadLib.Realisations;
 
 public class NelderMeadAlgorithm : INelderMeadAlgorithm
 {
@@ -16,11 +11,11 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
     AlgorithmParameters _parameters;
 
     public NelderMeadAlgorithm(
-        IFunction function, 
-        AlgorithmParameters parameters, 
+        IFunction function,
+        AlgorithmParameters parameters,
         ILogger? logger)
     {
-        if(function is null)
+        if (function is null)
         {
             throw new ArgumentNullException(nameof(function));
         }
@@ -48,8 +43,8 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
     Point Run(Simplex? startSimplex, CancellationToken token)
     {
         var result = startSimplex;
-        
-        if(result is null)
+
+        if (result is null)
         {
             result = PrepareTriangle();
         }
@@ -79,18 +74,18 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
 
     public Simplex CreateSimplex(Point[] points)
     {
-        if(_function.GetArgumentsNumber() + 1 > points.Length)
+        if (_function.GetArgumentsNumber() + 1 > points.Length)
         {
             throw new CantCreateSimplexException($"Not enough points to create simplex. " +
                 $"Expecting {_function.GetArgumentsNumber} points.");
         }
-        if(_function.GetArgumentsNumber() + 1 < points.Length)
+        if (_function.GetArgumentsNumber() + 1 < points.Length)
         {
             throw new CantCreateSimplexException("Too much points to create simplex. " +
                 $"Expecting {_function.GetArgumentsNumber} points.");
         }
 
-        for(int i = 0; i < points.Length; i++)
+        for (int i = 0; i < points.Length; i++)
         {
             points[i].Value = _function.Calculate(points[i].Coordinates);
         }
@@ -108,9 +103,9 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
     {
         int n = _function.GetArgumentsNumber();
         var points = new List<Point>(n + 1);
-        for(int i = 0; i < n + 1; i++)
+        for (int i = 0; i < n + 1; i++)
         {
-            var coordinates = Enumerable.Range(0, n).Select(s => Random.Shared.Next(-1000, 1000)*Random.Shared.NextDouble()).ToArray();
+            var coordinates = Enumerable.Range(0, n).Select(s => Random.Shared.Next(-1000, 1000) * Random.Shared.NextDouble()).ToArray();
             points.Add(new Point() { Coordinates = coordinates, Value = _function.Calculate(coordinates) });
         }
 
@@ -119,7 +114,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
 
     void MakeStep(ref Simplex from)
     {
-        if(from is null)
+        if (from is null)
         {
             return;
         }
@@ -146,7 +141,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
                 return;
             }
         }
-        if(from.Lowest.Value <= reflected.Value && reflected.Value < from.NextHighest.Value)
+        if (from.Lowest.Value <= reflected.Value && reflected.Value < from.NextHighest.Value)
         {
             var newPoints = from.Points
                 .Except(new[] { from.Highest })
@@ -154,10 +149,10 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
             from = new Simplex(newPoints.ToArray());
             return;
         }
-        if((from.NextHighest.Value <= reflected.Value && reflected.Value <= from.Highest.Value)
+        if (from.NextHighest.Value <= reflected.Value && reflected.Value <= from.Highest.Value
             || from.Highest.Value < reflected.Value)
         {
-            if(from.NextHighest.Value <= reflected.Value && reflected.Value <= from.Highest.Value)
+            if (from.NextHighest.Value <= reflected.Value && reflected.Value <= from.Highest.Value)
             {
                 var newPoints = from.Points
                     .Except(new[] { from.Highest })
@@ -165,7 +160,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
                 from = new Simplex(newPoints.ToArray());
             }
             var contractedPoint = ContractPoint(from.Highest, center);
-            if(contractedPoint.Value < from.Highest.Value)
+            if (contractedPoint.Value < from.Highest.Value)
             {
                 var newPoints = from.Points
                     .Except(new[] { from.Highest })
@@ -173,7 +168,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
                 from = new Simplex(newPoints.ToArray());
                 return;
             }
-            if(contractedPoint.Value > from.Highest.Value)
+            if (contractedPoint.Value > from.Highest.Value)
             {
                 from = ShrinkTriangle(from, from.Lowest);
                 return;

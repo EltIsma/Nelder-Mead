@@ -2,29 +2,19 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ModernWpf.Controls;
-using Nelder_Mead_App;
 using Nelder_Mead_App.Dialogs;
-using Nelder_Mead_App.Models;
 using NelderMeadLib;
 using NelderMeadLib.Exceptions;
 using NelderMeadLib.Interfaces;
 using NelderMeadLib.Models;
 using NelderMeadLib.Realisations;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace Nelder_Mead_App.ViewModels;
 
@@ -188,7 +178,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ShowHideLog()
     {
-        if(LogVisibility == Visibility.Visible)
+        if (LogVisibility == Visibility.Visible)
         {
             LogVisibility = Visibility.Collapsed;
         }

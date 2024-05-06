@@ -1,10 +1,4 @@
-﻿using Nelder_Mead_App.Models;
-using NelderMeadLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NelderMeadLib;
 using System.Windows.Documents;
 
 namespace Nelder_Mead_App;

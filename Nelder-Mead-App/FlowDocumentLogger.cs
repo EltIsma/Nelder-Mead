@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Documents;
+﻿using System.Windows.Documents;
 using NelderMeadLib.Interfaces;
 using NelderMeadLib.Models;
 
-namespace Nelder_Mead_App.Models;
+namespace Nelder_Mead_App;
 
 public class FlowDocumentLogger : ILogger
 {

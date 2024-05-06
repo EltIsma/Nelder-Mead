@@ -1,12 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NelderMeadLib.Models;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Nelder_Mead_App.Dialogs;
 
@@ -48,7 +44,7 @@ public partial class CreateSimplexDialogViewModel : ObservableObject
             try
             {
                 var point = StringToCoordinates(CurrentPoint);
-                if(point.Length != Arguments)
+                if (point.Length != Arguments)
                 {
                     IsAddButtonEnabled = false;
                     return;
@@ -69,7 +65,7 @@ public partial class CreateSimplexDialogViewModel : ObservableObject
         Points.Add(CurrentPoint);
         simplex.Add(new Point() { Coordinates = point });
         CurrentPoint = "";
-        
+
         IsPrimaryButtonEnabled = Points.Count == _points;
     }
 

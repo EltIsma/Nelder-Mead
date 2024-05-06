@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
@@ -16,10 +12,10 @@ public class VisibilityToTextConverter : IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
     {
-        if(value is not null)
-        { 
+        if (value is not null)
+        {
             var visibility = (Visibility)value;
-            if(visibility == Visibility.Visible)
+            if (visibility == Visibility.Visible)
             {
                 return VisibleValue;
             }
