@@ -69,7 +69,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
 
         _logger.LogSolution(result.Lowest);
 
-        return result.Highest;
+        return result.Lowest;
     }
 
     public Simplex CreateSimplex(Point[] points)
