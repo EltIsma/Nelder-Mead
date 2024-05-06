@@ -8,13 +8,18 @@
         xmlns:controls="clr-namespace:Nelder_Mead_App.Controls"
         xmlns:ui="http://schemas.modernwpf.com/2019" 
         xmlns:busyIndicator="https://github.com/moh3ngolshani/BusyIndicator" 
-        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:converters="clr-namespace:Nelder_Mead_App.Converters"
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:ThemeManager.RequestedTheme="Light"
         Title="MainWindow" Height="570" Width="800">
     <Window.InputBindings>
         <KeyBinding Key="Esc" Command="{Binding BreakAlgorithmRunCommand}"/>
     </Window.InputBindings>
+    <Window.Resources>
+        <converters:VisibilityToTextConverter x:Key="ShowHideLogConverter"
+                                              VisibleValue="Скрыть лог"
+                                              CollapsedValue="Показать лог"/>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
@@ -98,25 +103,68 @@
         <Grid Grid.Column="1" Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Content="Лог"
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Content="Решение"
                    Style="{DynamicResource Header}"
                    Margin="0"/>
-            <controls:LogTextBox Grid.Row="1"
+                <Border Grid.Row="1" 
+                        MinHeight="80"
+                        Background="{DynamicResource LightGray}">
+                    <StackPanel>
+                        <TextBlock Padding="10"
+                                   TextWrapping="Wrap"
+                            Text="{Binding SolutionValue, StringFormat=Значение: {0}}"
+                                   />
+                        <TextBlock Padding="10"
+                                   TextWrapping="Wrap"
+                            Text="{Binding SolutionCoordinates, StringFormat=Координаты: {0}}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <Grid Grid.Row="1" 
+                  Visibility="{Binding LogVisibility}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label Content="Лог"
+                   Style="{DynamicResource Header}"
+                   Margin="0"/>
+                <controls:LogTextBox Grid.Row="1"
                                  Background="{DynamicResource LightGray}"
                                  Document="{Binding LogDocument}"
                                  FontFamily="Montserrat"
                                  FontSize="12"
                                  Padding="20"
                                  IsReadOnly="True">
-                <RichTextBox.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Сохранить в файл" Command="{Binding SaveLogCommand}"/>
-                        <MenuItem Header="Очистить" Command="{Binding ClearLogCommand}"/>
-                    </ContextMenu>
-                </RichTextBox.ContextMenu>
-            </controls:LogTextBox>
+                    <RichTextBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Сохранить в файл" Command="{Binding SaveLogCommand}"/>
+                            <MenuItem Header="Очистить" Command="{Binding ClearLogCommand}"/>
+                        </ContextMenu>
+                    </RichTextBox.ContextMenu>
+                </controls:LogTextBox>
+            </Grid>
+            <Button Grid.Row="2"
+                    HorizontalAlignment="Right"
+                    Margin="0,15"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding ShowHideLogCommand}">
+                <Button.Content>
+                    <Label Content="{Binding LogVisibility, Converter={StaticResource ShowHideLogConverter}}"
+                           Padding="5"
+                           Margin="15,0"
+                           FontSize="12"
+                           Foreground="White"/>
+                </Button.Content>
+            </Button>
         </Grid>
     </Grid>
 </Window>

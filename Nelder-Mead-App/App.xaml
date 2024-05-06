@@ -81,7 +81,6 @@
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="Padding" Value="10"/>
             </Style>
-
         </ResourceDictionary>
     </Application.Resources>
 </Application>

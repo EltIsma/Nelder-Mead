@@ -34,9 +34,9 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
     {
         return await Task.Run(() => Run(token), token);
     }
-    public async Task<Point> RunAsync(Simplex startTriangle, CancellationToken token)
+    public async Task<Point> RunAsync(Simplex? startSimplex, CancellationToken token)
     {
-        return await Task.Run(() => Run(startTriangle, token), token);
+        return await Task.Run(() => Run(startSimplex, token), token);
     }
 
     Point Run(CancellationToken token)
@@ -45,9 +45,15 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
         return Run(startTriangle, token);
     }
 
-    Point Run(Simplex startSimplex, CancellationToken token)
+    Point Run(Simplex? startSimplex, CancellationToken token)
     {
         var result = startSimplex;
+        
+        if(result is null)
+        {
+            result = PrepareTriangle();
+        }
+
         int steps = 0;
         _logger?.LogStep(result, steps);
         steps++;

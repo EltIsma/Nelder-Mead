@@ -39,4 +39,9 @@ public static class Helpers
         await ContentDialogMaker.CreateContentDialogAsync(dialog, true);
         return ContentDialogMaker.Result;
     }
+
+    public static string FormatCoordinates(double[] coordinates)
+    {
+        return $"({String.Join("; ", coordinates.Select(c => Math.Round(c, 8)))})";
+    }
 }

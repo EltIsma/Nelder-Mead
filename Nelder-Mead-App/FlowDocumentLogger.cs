@@ -26,7 +26,7 @@ public class FlowDocumentLogger : ILogger
 
                 var paragraph = new Paragraph(new Bold(new Run($"РЕШЕНИЕ")));
                 paragraph.Inlines.Add(new Run($"\nЗначение: {solution.Value}"));
-                paragraph.Inlines.Add(new Run($"\nКоординаты: {FormatCoordinates(solution.Coordinates)}"));
+                paragraph.Inlines.Add(new Run($"\nКоординаты: {Helpers.FormatCoordinates(solution.Coordinates)}"));
 
                 _document.Blocks.Add(paragraph);
             });
@@ -41,30 +41,25 @@ public class FlowDocumentLogger : ILogger
             var itemList = new List();
             foreach (var point in message.Points)
             {
-                string formatted = $"{point.Value} - {FormatCoordinates(point.Coordinates)}";
+                string formatted = $"{point.Value} - {Helpers.FormatCoordinates(point.Coordinates)}";
                 itemList.ListItems.Add(new ListItem(new Paragraph(new Run(formatted))));
             }
             _document.Blocks.Add(itemList);
 
             var paragraph = new Paragraph(new Bold(new Run($"Лучшая точка")));
-            string best = $"\n{message.Lowest.Value} - {FormatCoordinates(message.Lowest.Coordinates)}";
+            string best = $"\n{message.Lowest.Value} - {Helpers.FormatCoordinates(message.Lowest.Coordinates)}";
             paragraph.Inlines.Add(new Run(best));
             _document.Blocks.Add(paragraph);
 
             paragraph = new Paragraph(new Bold(new Run($"Хорошая точка")));
-            string good = $"\n{message.NextHighest.Value} - {FormatCoordinates(message.NextHighest.Coordinates)}";
+            string good = $"\n{message.NextHighest.Value} - {Helpers.FormatCoordinates(message.NextHighest.Coordinates)}";
             paragraph.Inlines.Add(new Run(good));
             _document.Blocks.Add(paragraph);
 
             paragraph = new Paragraph(new Bold(new Run($"Худшая точка")));
-            string worst = $"\n{message.Highest.Value} - {FormatCoordinates(message.Highest.Coordinates)}";
+            string worst = $"\n{message.Highest.Value} - {Helpers.FormatCoordinates(message.Highest.Coordinates)}";
             paragraph.Inlines.Add(new Run(worst));
             _document.Blocks.Add(paragraph);
         });
-    }
-
-    private string FormatCoordinates(double[] coordinates)
-    {
-        return $"({String.Join("; ", coordinates.Select(c => Math.Round(c, 8)))})";
     }
 }

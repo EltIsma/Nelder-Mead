@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ModernWpf.Controls;
+using Nelder_Mead_App;
 using Nelder_Mead_App.Dialogs;
 using Nelder_Mead_App.Models;
 using NelderMeadLib;
@@ -15,6 +16,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,15 +43,22 @@ public partial class MainWindowViewModel : ObservableObject
     FlowDocument logDocument;
 
     [ObservableProperty]
+    Visibility logVisibility = Visibility.Collapsed;
+
+    [ObservableProperty]
     AlgorithmParameters algorithmParameters;
 
     [ObservableProperty]
     bool isAlgorithmRunning = false;
 
-    private Task<NelderMeadLib.Models.Point> algorithmTask;
+    [ObservableProperty]
+    string solutionValue = "";
 
     [ObservableProperty]
-    string function;
+    string solutionCoordinates = "";
+
+    [ObservableProperty]
+    string function = "";
 
     bool isCorrectInput;
 
@@ -102,47 +111,48 @@ public partial class MainWindowViewModel : ObservableObject
 
             var algorithm = _algorithmBuilder.Build();
 
+            Simplex? simplex = null;
             if (AlgorithmParameters.UseUserSimplex)
             {
-                var simplexDialog = new CreateSimplexDialog(
-                    algorithm.GetSimplexSize(),
-                    algorithm.GetArgumentsNumber());
-                await ContentDialogMaker.CreateContentDialogAsync(simplexDialog, true);
-                if (ContentDialogMaker.Result == ContentDialogResult.Primary)
-                {
-                    try
-                    {
-                        IsAlgorithmRunning = true;
-                        await algorithm.RunAsync(algorithm.CreateSimplex(simplexDialog.Simplex.ToArray()), _cts.Token);
-                    }
-                    catch (OperationCanceledException ex) { }
-                    finally
-                    {
-                        IsAlgorithmRunning = false;
-                    }
-                }
+                simplex = await GetUserSimplex(algorithm);
             }
-            else
-            {
-                try
-                {
-                    IsAlgorithmRunning = true;
-                    await algorithm.RunAsync(_cts.Token);
-                }
-                catch(OperationCanceledException ex)
-                {
 
-                }
-                finally
-                {
-                    IsAlgorithmRunning = false;
-                }
+            if (AlgorithmParameters.UseUserSimplex && simplex is null)
+            {
+                return;
+            }
+
+            try
+            {
+                IsAlgorithmRunning = true;
+                var res = await algorithm.RunAsync(simplex, _cts.Token);
+                SolutionValue = res.Value.ToString();
+                SolutionCoordinates = Helpers.FormatCoordinates(res.Coordinates);
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                IsAlgorithmRunning = false;
             }
         }
         else
         {
             await Helpers.DisplayMessageDialog("Проверьте правильность ввода", "Ошибка");
         }
+    }
+
+    private async Task<Simplex?> GetUserSimplex(INelderMeadAlgorithm algorithm)
+    {
+        var simplexDialog = new CreateSimplexDialog(
+                        algorithm.GetSimplexSize(),
+                        algorithm.GetArgumentsNumber());
+        await ContentDialogMaker.CreateContentDialogAsync(simplexDialog, true);
+        if (ContentDialogMaker.Result == ContentDialogResult.Primary)
+        {
+            return algorithm.CreateSimplex(simplexDialog.Simplex.ToArray());
+        }
+
+        return null;
     }
 
     [RelayCommand]
@@ -172,6 +182,19 @@ public partial class MainWindowViewModel : ObservableObject
         if (settings.ShowDialog() == true)
         {
             AlgorithmParameters = settings.ResultParameters;
+        }
+    }
+
+    [RelayCommand]
+    private void ShowHideLog()
+    {
+        if(LogVisibility == Visibility.Visible)
+        {
+            LogVisibility = Visibility.Collapsed;
+        }
+        else
+        {
+            LogVisibility = Visibility.Visible;
         }
     }
 
