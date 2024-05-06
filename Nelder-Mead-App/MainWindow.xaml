@@ -17,8 +17,8 @@
     </Window.InputBindings>
     <Window.Resources>
         <converters:VisibilityToTextConverter x:Key="ShowHideLogConverter"
-                                              VisibleValue="Скрыть лог"
-                                              CollapsedValue="Показать лог"/>
+                                              VisibleValue="Скрыть"
+                                              CollapsedValue="Показать"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -104,7 +104,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid>
                 <Grid.RowDefinitions>
@@ -128,31 +128,11 @@
                     </StackPanel>
                 </Border>
             </Grid>
-            <Grid Grid.Row="1" 
-                  Visibility="{Binding LogVisibility}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Label Content="Лог"
+            <Label Grid.Row="1"
+                Content="Лог"
                    Style="{DynamicResource Header}"
                    Margin="0"/>
-                <controls:LogTextBox Grid.Row="1"
-                                 Background="{DynamicResource LightGray}"
-                                 Document="{Binding LogDocument}"
-                                 FontFamily="Montserrat"
-                                 FontSize="12"
-                                 Padding="20"
-                                 IsReadOnly="True">
-                    <RichTextBox.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Сохранить в файл" Command="{Binding SaveLogCommand}"/>
-                            <MenuItem Header="Очистить" Command="{Binding ClearLogCommand}"/>
-                        </ContextMenu>
-                    </RichTextBox.ContextMenu>
-                </controls:LogTextBox>
-            </Grid>
-            <Button Grid.Row="2"
+            <Button Grid.Row="1"
                     HorizontalAlignment="Right"
                     Margin="0,15"
                     Style="{StaticResource SecondaryButton}"
@@ -165,6 +145,21 @@
                            Foreground="White"/>
                 </Button.Content>
             </Button>
+            <controls:LogTextBox Grid.Row="2"
+                                 Background="{DynamicResource LightGray}"
+                                     Visibility="{Binding LogVisibility}"
+                                 Document="{Binding LogDocument}"
+                                 FontFamily="Montserrat"
+                                 FontSize="12"
+                                 Padding="20"
+                                 IsReadOnly="True">
+                <RichTextBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Сохранить в файл" Command="{Binding SaveLogCommand}"/>
+                        <MenuItem Header="Очистить" Command="{Binding ClearLogCommand}"/>
+                    </ContextMenu>
+                </RichTextBox.ContextMenu>
+            </controls:LogTextBox>
         </Grid>
     </Grid>
 </Window>
