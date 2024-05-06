@@ -32,20 +32,20 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
 
     public async Task<Point> RunAsync(CancellationToken token)
     {
-        return await Task.Run(Run, token);
+        return await Task.Run(() => Run(token), token);
     }
     public async Task<Point> RunAsync(Simplex startTriangle, CancellationToken token)
     {
-        return await Task.Run(() => Run(startTriangle), token);
+        return await Task.Run(() => Run(startTriangle, token), token);
     }
 
-    Point Run()
+    Point Run(CancellationToken token)
     {
         var startTriangle = PrepareTriangle();
-        return Run(startTriangle);
+        return Run(startTriangle, token);
     }
 
-    Point Run(Simplex startSimplex)
+    Point Run(Simplex startSimplex, CancellationToken token)
     {
         var result = startSimplex;
         int steps = 0;
@@ -54,6 +54,8 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
 
         while (!IsStopRequired(result, steps))
         {
+            token.ThrowIfCancellationRequested();
+
             MakeStep(ref result);
             _logger?.LogStep(result, steps);
             steps++;

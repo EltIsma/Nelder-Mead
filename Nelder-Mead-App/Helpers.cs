@@ -22,4 +22,21 @@ public static class Helpers
         await ContentDialogMaker.CreateContentDialogAsync(dialog, true);
         return ContentDialogMaker.Result;
     }
+
+    public static async Task<ContentDialogResult> DisplayQuestionDialog(
+        string message, 
+        string header,
+        string primaryButton,
+        string secondaryButton)
+    {
+        MyContentDialog dialog = new MyContentDialog()
+        {
+            Content = message,
+            PrimaryButtonText = primaryButton,
+            SecondaryButtonText = secondaryButton,
+            Title = header
+        };
+        await ContentDialogMaker.CreateContentDialogAsync(dialog, true);
+        return ContentDialogMaker.Result;
+    }
 }

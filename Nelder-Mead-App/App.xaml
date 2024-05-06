@@ -21,6 +21,8 @@
                 <ResourceDictionary Source="pack://application:,,,/BusyIndicator;component/Theme/Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <SolidColorBrush x:Key="IndicatorForeground" Color="#bf8d63" />
+
             <SolidColorBrush x:Key="LightGray" Color="#f1f1f1"/>
             <SolidColorBrush x:Key="DarkGray" Color="#FFB3B3B3"/>
             <SolidColorBrush x:Key="Accent" Color="#bf8d63"/>
