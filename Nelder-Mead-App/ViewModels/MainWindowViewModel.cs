@@ -8,6 +8,9 @@ using NelderMeadLib.Exceptions;
 using NelderMeadLib.Interfaces;
 using NelderMeadLib.Models;
 using NelderMeadLib.Realisations;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -42,6 +45,12 @@ public partial class MainWindowViewModel : ObservableObject
     bool isAlgorithmRunning = false;
 
     [ObservableProperty]
+    Visibility busyIndicatorVisibility = Visibility.Visible;
+
+    [ObservableProperty]
+    Visibility visualizerVisibility = Visibility.Collapsed;
+
+    [ObservableProperty]
     string solutionValue = "";
 
     [ObservableProperty]
@@ -50,54 +59,60 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     string function = "";
 
+    [ObservableProperty]
+    PlotModel plotModel;
+
     bool isCorrectInput;
 
     private NelderMeadAlgorithmBuilder _algorithmBuilder;
 
     private CancellationTokenSource _cts;
 
+    private CustomLogger _customLogger;
+
     public MainWindowViewModel()
     {
+        PlotModel = new PlotModel();
+
         _cts = new CancellationTokenSource();
 
         algorithmParameters = new();
         logDocument = new FlowDocument();
 
         _algorithmBuilder = new NelderMeadAlgorithmBuilder();
-        _algorithmBuilder.UseFlowDocumentLogger(logDocument);
+        //_algorithmBuilder.UseFlowDocumentLogger(logDocument);
+        _customLogger = new CustomLogger();
+        _algorithmBuilder.SetLogger(_customLogger);
 
-        PropertyChanged += MainWindowViewModel_PropertyChanged;
-    }
-
-    private void MainWindowViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(Function))
-        {
-            try
-            {
-                var func = new Function(Function);
-                isCorrectInput = true;
-            }
-            catch (CantParseExpressionException ex)
-            {
-                isCorrectInput = false;
-                Debug.WriteLine(ex);
-            }
-        }
     }
 
     [RelayCommand]
     private async Task RunAlgorithm()
     {
-        if (isCorrectInput)
+        try
         {
-            _algorithmBuilder.SetFunction(Function)
+            var func = new Function(Function);
+
+            _algorithmBuilder.SetFunction(func)
                 .SetMaxIterations(AlgorithmParameters.MaxIterations)
                 .SetExpansionCoef(AlgorithmParameters.ExpansionCoef)
                 .SetContractionCoef(AlgorithmParameters.ContractionCoef)
                 .SetShrinkCoef(AlgorithmParameters.ShrinkCoef)
                 .SetReflectionCoef(AlgorithmParameters.ReflectionCoef)
                 .SetSolutionPrecision(AlgorithmParameters.SolutionPrecision);
+
+            _customLogger.Clear();
+
+            if (func.GetArgumentsNumber() == 2)
+            {
+                VisualizerVisibility = Visibility.Visible;
+                BusyIndicatorVisibility = Visibility.Collapsed;
+            }
+            else
+            {
+                VisualizerVisibility = Visibility.Collapsed;
+                BusyIndicatorVisibility = Visibility.Visible;
+            }
 
             var algorithm = _algorithmBuilder.Build();
 
@@ -115,9 +130,16 @@ public partial class MainWindowViewModel : ObservableObject
             try
             {
                 IsAlgorithmRunning = true;
+
                 var res = await algorithm.RunAsync(simplex, _cts.Token);
+
+                AddLogToFlowDocument();
+                await VisualizeSteps();
+
                 SolutionValue = res.Value.ToString();
                 SolutionCoordinates = Helpers.FormatCoordinates(res.Coordinates);
+
+                await Helpers.DisplayMessageDialog("Алгоритм завершил выполнение", "Инфо");
             }
             catch (OperationCanceledException) { }
             finally
@@ -125,10 +147,105 @@ public partial class MainWindowViewModel : ObservableObject
                 IsAlgorithmRunning = false;
             }
         }
-        else
+        catch (CantParseExpressionException)
         {
             await Helpers.DisplayMessageDialog("Проверьте правильность ввода", "Ошибка");
         }
+    }
+
+    private void AddLogToFlowDocument()
+    {
+        var flowDocumentLogger = new FlowDocumentLogger(LogDocument);
+        int steps = 0;
+        foreach (var value in _customLogger.Steps)
+        {
+            flowDocumentLogger.LogStep(value, steps++);
+        }
+        flowDocumentLogger.LogSolution(_customLogger.Solution);
+    }
+
+    private async Task VisualizeSteps()
+    {
+        PlotModel.Axes.Clear();
+        PlotModel.Axes.Add(new LinearAxis()
+        {
+            Position = AxisPosition.Bottom,
+            Minimum = -10,
+            Maximum = 10
+        });
+        PlotModel.Axes.Add(new LinearAxis()
+        {
+            Position = AxisPosition.Left,
+            Minimum = -10,
+            Maximum = 10
+        });
+
+        var func = new Function(Function);
+
+        if (func.GetArgumentsNumber() != 2)
+        {
+            return;
+        }
+        PlotModel.Series.Clear();
+
+        DrawFunction(func);
+
+        var s1 = new LineSeries()
+        {
+            Color = OxyColors.Black,
+            MarkerType = MarkerType.Circle,
+            MarkerSize = 3,
+            MarkerFill = OxyColors.Green,
+            MarkerStrokeThickness = 1
+        };
+
+        PlotModel.Series.Add(s1);
+
+        foreach (var value in _customLogger.Steps)
+        {
+            s1.Points.Add(new DataPoint(value.Highest.Coordinates[0], value.Highest.Coordinates[1]));
+            s1.Points.Add(new DataPoint(value.NextHighest.Coordinates[0], value.NextHighest.Coordinates[1]));
+            s1.Points.Add(new DataPoint(value.Lowest.Coordinates[0], value.Lowest.Coordinates[1]));
+            s1.Points.Add(new DataPoint(value.Highest.Coordinates[0], value.Highest.Coordinates[1]));
+
+            PlotModel.InvalidatePlot(true);
+            await Task.Delay(200);
+
+            s1.Points.Clear();
+        }
+    }
+
+    private void DrawFunction(Function func)
+    {
+        if (func.GetArgumentsNumber() != 2)
+        {
+            return;
+        }
+
+        double x0 = -10;
+        double x1 = 10;
+        double y0 = -10;
+        double y1 = 10;
+
+        var xx = ArrayBuilder.CreateVector(x0, x1, 100);
+        var yy = ArrayBuilder.CreateVector(y0, y1, 100);
+        var zz = ArrayBuilder.CreateVector(-10, 10, 10);
+
+        var peaksData = new double[100, 100];
+        for (int i = 0; i < 100; i++)
+            for (int j = 0; j < 100; j++)
+                peaksData[i, j] = func.Calculate(new double[] { xx[i], yy[j] });
+
+        var cs = new ContourSeries
+        {
+            ColumnCoordinates = xx,
+            RowCoordinates = yy,
+            Data = peaksData,
+            ContourLevels = zz
+        };
+
+        PlotModel.Series.Add(cs);
+        PlotModel.InvalidatePlot(true);
     }
 
     private async Task<Simplex?> GetUserSimplex(INelderMeadAlgorithm algorithm)

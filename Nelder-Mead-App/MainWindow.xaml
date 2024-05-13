@@ -8,7 +8,9 @@
         xmlns:controls="clr-namespace:Nelder_Mead_App.Controls"
         xmlns:ui="http://schemas.modernwpf.com/2019" 
         xmlns:busyIndicator="https://github.com/moh3ngolshani/BusyIndicator" 
-        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:converters="clr-namespace:Nelder_Mead_App.Converters"
+        xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors" 
+        xmlns:converters="clr-namespace:Nelder_Mead_App.Converters" 
+        xmlns:oxy="clr-namespace:OxyPlot.Wpf;assembly=OxyPlot.Wpf"
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:ThemeManager.RequestedTheme="Light"
         Title="MainWindow" Height="570" Width="800">
@@ -31,10 +33,12 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="1.2*"/>
             </Grid.RowDefinitions>
-            <Grid Margin="0,0,0,20"
-                  Background="{DynamicResource LightGray}">
+            <Grid Margin="0,0,0,20">
+                <oxy:PlotView Model="{Binding PlotModel}"
+                              Visibility="{Binding VisualizerVisibility}"/>
                 <busyIndicator:BusyMask x:Name="BusyIndicator" 
-                        IsBusy="{Binding IsAlgorithmRunning}" 
+                        IsBusy="{Binding IsAlgorithmRunning}"
+                        Visibility="{Binding BusyIndicatorVisibility}"
                         IndicatorType="Grid"
                         BusyContent="Вычисляем..." 
                         BusyContentMargin="0,40,0,0" 
