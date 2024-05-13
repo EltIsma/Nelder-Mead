@@ -185,7 +185,7 @@ public class NelderMeadAlgorithm : INelderMeadAlgorithm
             .ToArray());
 
         return deviation < _parameters.SolutionPrecision
-            && steps < _parameters.MaxIterations;
+            || steps > _parameters.MaxIterations;
     }
 
     Point ReflectPoint(Point bestPoint, Point centerPoint)
