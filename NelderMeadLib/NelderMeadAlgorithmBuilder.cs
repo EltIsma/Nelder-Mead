@@ -1,6 +1,7 @@
 ﻿using NelderMeadLib.Interfaces;
 using NelderMeadLib.Models;
 using NelderMeadLib.Realisations;
+using Function = NelderMeadLib.Realisations.Function;
 
 namespace NelderMeadLib;
 
@@ -53,6 +54,12 @@ public class NelderMeadAlgorithmBuilder
     public NelderMeadAlgorithmBuilder SetFunction(string function)
     {
         _function = new Function(function);
+        return this;
+    }
+
+    public NelderMeadAlgorithmBuilder SetFunction(Function function)
+    {
+        _function = function;
         return this;
     }
 
