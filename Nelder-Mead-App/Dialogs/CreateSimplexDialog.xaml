@@ -1,0 +1,56 @@
+﻿<ui:ContentDialog 
+        x:Class="Nelder_Mead_App.CreateSimplexDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Nelder_Mead_App"
+        mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019" xmlns:validations="clr-namespace:Nelder_Mead_App.Validations"
+    Height="Auto" Width="Auto"
+        SecondaryButtonStyle="{DynamicResource SecondaryButton}"
+        PrimaryButtonStyle="{DynamicResource AccentButton}"
+        IsPrimaryButtonEnabled="{Binding IsPrimaryButtonEnabled}"
+        CloseButtonStyle="{DynamicResource SecondaryButton}"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    PrimaryButtonText="Сохранить"
+    SecondaryButtonText="Отмена"
+    Title="Начальный симплекс"
+    MaxHeight="300">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding Points}"
+                          MaxHeight="300">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Label Margin="0,0,0,10"
+                            Content="{Binding .}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox>
+                <TextBox.Text>
+                    <Binding Path="CurrentPoint"
+UpdateSourceTrigger="PropertyChanged">
+                    </Binding>
+                </TextBox.Text>
+            </TextBox>
+            <Button Grid.Column="1"
+                Style="{DynamicResource AccentButton}"
+                    Margin="15,0,0,0"
+                    Command="{Binding AddPointCommand}"
+                    IsEnabled="{Binding IsAddButtonEnabled}"
+                Content="+"/>
+        </Grid>
+    </Grid>
+</ui:ContentDialog>
